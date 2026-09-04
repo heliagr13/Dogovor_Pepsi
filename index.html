@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Операция «Договориться»</title>
+<style>
+:root{
+  --ink:#171614;
+  --cream:#e9e1d4;
+  --cream2:#d8cfc0;
+  --tan:#b58b58;
+  --gold:#d3ad59;
+  --yellow:#f1c84b;
+  --dark:#181817;
+  --dark2:#292724;
+  --metal:#8d8270;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#111;font-family:Arial,Helvetica,sans-serif}
+body{display:flex;align-items:center;justify-content:center;padding:18px}
+button{font:inherit}
+button:focus-visible{outline:3px solid #f1c84b;outline-offset:3px}
+
+.game-wrap{
+  width:min(1600px,100%);
+  aspect-ratio:16/9;
+  position:relative;
+}
+.stage{
+  position:absolute;inset:0;
+  overflow:hidden;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 46% 30%,#59544d 0,#302d29 35%,#171615 75%);
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.5),
+    inset 0 0 0 1px rgba(255,255,255,.09);
+}
+.ambient{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 23%,rgba(255,244,216,.17),transparent 33%),
+    linear-gradient(180deg,rgba(255,255,255,.035),transparent 24%,rgba(0,0,0,.16));
+}
+.header-panel{
+  position:absolute;z-index:10;
+  left:5.5%;right:5.5%;top:4.5%;height:27%;
+  padding:2.2% 3%;
+  border:1px solid rgba(43,39,33,.9);
+  border-radius:13px;
+  background:linear-gradient(145deg,#e6ded1,#cfc4b5);
+  box-shadow:
+    0 9px 18px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.8),
+    inset 0 -3px 8px rgba(94,77,55,.16);
+  color:#171614
+}
+.header-inner{display:flex;justify-content:space-between;gap:4%;height:100%}
+.mission-copy{width:42%;min-width:0}
+.mission-label{
+  font-size:clamp(7px,1vw,13px);
+  letter-spacing:.13em;text-transform:uppercase;font-weight:700;opacity:.52
+}
+.mission-title{
+  margin-top:.7%;
+  font-size:clamp(16px,2.1vw,34px);
+  line-height:1.08;font-weight:800;letter-spacing:-.03em
+}
+.mission-sub{margin-top:2%;font-size:clamp(8px,1vw,14px);opacity:.62}
+.progress-labels{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:5%;font-size:clamp(7px,.9vw,12px);font-weight:700
+}
+.progress-track{
+  height:clamp(5px,.7vw,10px);margin-top:1.4%;
+  border-radius:999px;background:rgba(255,255,255,.56);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.25)
+}
+.progress-fill{
+  height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,#f7d45d,#e5b937);
+  box-shadow:0 0 8px rgba(241,200,75,.32);
+  transition:width .35s ease
+}
+.stats{
+  width:54%;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:3%;align-self:end;padding-bottom:1%
+}
+.stat{
+  height:48%;min-height:58px;padding:7% 8%;
+  border:1px solid rgba(70,61,51,.3);
+  border-radius:11px;background:rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+  display:flex;align-items:center;gap:9%
+}
+.stat-icon{
+  flex:0 0 auto;width:clamp(22px,2.3vw,36px);height:clamp(22px,2.3vw,36px);
+  border:1.5px solid rgba(38,34,30,.58);border-radius:7px;
+  display:grid;place-items:center;
+  font-size:clamp(10px,1.1vw,16px);font-weight:800
+}
+.stat span{display:block;font-size:clamp(7px,.75vw,10px);opacity:.55}
+.stat b{display:block;margin-top:1px;font-size:clamp(13px,1.55vw,23px);line-height:1;font-weight:800}
+
+.drawer-shell{position:absolute;z-index:5;left:4.8%;right:4.8%;top:29%;bottom:3%}
+.drawer-inner{
+  position:absolute;left:3%;right:3%;top:0;bottom:19%;
+  border:2px solid #0b0b0a;border-bottom:0;border-radius:8px 8px 0 0;
+  background:linear-gradient(180deg,#292826,#121211 22%,#1a1918 100%);
+  box-shadow:inset 0 12px 25px rgba(255,255,255,.05),0 10px 24px rgba(0,0,0,.35)
+}
+.rail{
+  position:absolute;top:6%;bottom:2%;width:1.6%;min-width:8px;
+  background:linear-gradient(90deg,#56514a,#aaa08e 45%,#5a554c);
+  border:1px solid #282521;border-radius:6px;
+  box-shadow:0 2px 3px rgba(0,0,0,.45)
+}
+.rail.left{left:4.5%}.rail.right{right:4.5%}
+.folder-stack{position:absolute;left:6%;right:6%;top:5%;bottom:0}
+.folder{
+  position:absolute;left:0;right:0;height:36%;
+  filter:drop-shadow(0 5px 5px rgba(0,0,0,.28))
+}
+.folder.case3{top:1%;z-index:10}
+.folder.case2{top:28%;z-index:20}
+.folder.case1{top:55%;z-index:30}
+.folder-button{
+  position:absolute;inset:0;width:100%;border:0;background:transparent;
+  padding:0;text-align:left;cursor:pointer;color:#171614
+}
+.folder-paper{
+  position:absolute;inset:16% 0 0;
+  border:1.5px solid rgba(49,42,34,.88);
+  border-radius:11px 11px 3px 3px;
+  background:linear-gradient(155deg,#e8dfd1,#cfc3b0);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.9),
+    inset 0 -9px 18px rgba(81,61,39,.09);
+  transition:filter .16s ease,border-color .16s ease
+}
+.case2 .folder-paper{background:linear-gradient(150deg,#c69d69,#a77d4d)}
+.case1 .folder-paper{background:linear-gradient(150deg,#eee8dd,#d7cdbc)}
+.folder-button:hover .folder-paper{filter:brightness(1.06);border-color:#191714}
+.tab{
+  position:absolute;top:0;height:34%;min-height:25px;
+  padding:0 3%;display:flex;align-items:center;gap:12%;
+  border:1.5px solid rgba(49,42,34,.88);border-bottom:0;
+  border-radius:10px 10px 0 0;background:#dfd4c4;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.7)
+}
+.case3 .tab{left:5%;width:33%}
+.case2 .tab{left:11%;width:31%;background:#ba8d58}
+.case1 .tab{left:6%;width:32%;background:#e6ddd0}
+.case-id{
+  padding:2px 7px;border:1px solid rgba(56,47,38,.27);
+  border-radius:5px;font-size:clamp(7px,.75vw,10px);font-weight:800;white-space:nowrap
+}
+.case-code{font-size:clamp(9px,.9vw,13px);font-weight:700;opacity:.55;white-space:nowrap}
+.folder-content{
+  position:absolute;left:5%;right:5%;top:44%;
+  display:flex;align-items:center;justify-content:space-between;gap:4%
+}
+.folder-title{
+  min-width:0;font-size:clamp(11px,1.55vw,24px);
+  font-weight:800;letter-spacing:-.025em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.folder-badge{
+  flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  padding:5px 11px;border:1px solid rgba(44,38,31,.32);
+  border-radius:999px;background:rgba(255,255,255,.18);
+  font-size:clamp(9px,.88vw,13px);font-weight:800;white-space:nowrap
+}
+.case1 .folder-badge{
+  background:linear-gradient(180deg,#ffd85e,#ebbd35);
+  box-shadow:0 3px 7px rgba(82,55,12,.2)
+}
+.folder-badge.done{background:#1d1b18;color:#f0e7da;border-color:#111}
+.dot{width:8px;height:8px;border:1.4px solid currentColor;border-radius:50%}
+
+.drawer-front{
+  position:absolute;z-index:40;left:0;right:0;bottom:0;height:25%;
+  border:2px solid #0c0b0a;border-radius:5px 5px 13px 13px;
+  background:linear-gradient(145deg,#242320,#111110);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.09),
+    inset 0 -10px 20px rgba(0,0,0,.35),
+    0 14px 24px rgba(0,0,0,.4)
+}
+.label-plate{
+  position:absolute;left:50%;top:24%;transform:translateX(-50%);
+  width:24%;height:42%;
+  border:2px solid #79613c;border-radius:6px;
+  background:linear-gradient(145deg,#ceb16f,#8f7041);
+  box-shadow:0 3px 5px rgba(0,0,0,.5),inset 0 0 0 3px #2e2518,inset 0 0 0 5px #b99959;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:#17120d
+}
+.label-plate b{font-family:Georgia,serif;font-size:clamp(8px,.95vw,14px);letter-spacing:.06em}
+.label-plate span{font-family:Georgia,serif;font-size:clamp(6px,.58vw,9px);margin-top:1px}
+.handle{
+  position:absolute;left:50%;top:72%;transform:translateX(-50%);
+  width:16%;height:36%;
+  border:7px solid #756c5f;border-top-width:5px;border-radius:0 0 24px 24px;
+  box-shadow:inset 0 0 3px #191714,0 4px 6px rgba(0,0,0,.5)
+}
+.hint{
+  position:absolute;z-index:60;left:2%;bottom:2.2%;
+  font-size:clamp(7px,.75vw,10px);color:rgba(255,255,255,.55);letter-spacing:.03em
+}
+.restart{
+  position:absolute;z-index:60;right:2%;bottom:1.5%;
+  min-height:34px;padding:6px 12px;
+  border:1px solid rgba(255,255,255,.2);border-radius:8px;
+  background:rgba(255,255,255,.08);color:#eee8de;
+  font-size:clamp(7px,.75vw,10px);font-weight:700;cursor:pointer
+}
+
+.modal-layer{
+  position:absolute;z-index:100;inset:0;display:none;
+  align-items:center;justify-content:flex-end;padding:3.6%;
+  background:rgba(7,7,7,.48);backdrop-filter:blur(2px)
+}
+.modal-layer.open{display:flex}
+.case-modal{
+  width:43%;height:88%;min-width:0;
+  border:1px solid rgba(71,62,52,.38);border-radius:15px;
+  background:linear-gradient(145deg,#f0eadf,#ded4c5);
+  box-shadow:0 22px 48px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.9);
+  overflow:hidden;color:#181613;animation:modalIn .22s ease both
+}
+.modal-head{
+  height:20%;padding:5% 7%;
+  display:flex;justify-content:space-between;gap:5%;
+  border-bottom:1px solid rgba(72,61,48,.18)
+}
+.modal-case{
+  display:inline-block;padding:3px 7px;border-radius:5px;
+  background:#efc64a;font-size:clamp(8px,.78vw,12px);font-weight:800;letter-spacing:.03em
+}
+.modal-title{
+  margin-top:3%;font-size:clamp(16px,2vw,30px);
+  line-height:1.05;font-weight:800;letter-spacing:-.03em
+}
+.close-modal{
+  flex:0 0 auto;width:clamp(28px,3vw,42px);height:clamp(28px,3vw,42px);
+  border:1px solid rgba(55,47,39,.23);border-radius:50%;
+  background:rgba(255,255,255,.2);
+  font-size:clamp(15px,1.8vw,25px);line-height:1;color:#5f574d;cursor:pointer
+}
+.case-brief{
+  height:22%;padding:4% 7%;
+  border-bottom:1px solid rgba(72,61,48,.18);
+  font-size:clamp(10px,1vw,15px);line-height:1.5;overflow:auto
+}
+.case-brief b{display:block;margin-bottom:2%;font-size:clamp(11px,1.1vw,16px)}
+.question-area{height:58%;padding:4% 7%;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.q-count{font-size:clamp(9px,.9vw,13px);font-weight:700;opacity:.68}
+.q-text{margin-top:1.5%;font-size:clamp(12px,1.3vw,19px);line-height:1.3;font-weight:800}
+.answers{display:grid;gap:12px;margin-top:14px;flex:0 0 auto;min-height:auto}
+.answer{
+  position:relative;width:100%;min-height:64px;
+  padding:14px 16px 14px 56px;
+  border:1px solid rgba(71,61,49,.25);
+  border-radius:9px;background:rgba(255,255,255,.22);
+  color:#1c1915;text-align:left;
+  font-size:clamp(10px,1vw,15px);line-height:1.38;cursor:pointer;
+  transition:background .14s ease,border-color .14s ease
+}
+.answer:hover{background:rgba(255,255,255,.42);border-color:rgba(51,44,36,.48)}
+.answer-letter{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:30px;height:30px;
+  border-radius:50%;background:#f1c84b;display:grid;place-items:center;
+  font-size:clamp(10px,.95vw,14px);font-weight:800;
+  box-shadow:0 2px 4px rgba(73,48,8,.18)
+}
+.answer.good{background:#dfe7d8;border-color:#758267}
+.answer.bad{background:#ead9d2;border-color:#9a6f65}
+.answer:disabled{cursor:default}
+.feedback{
+  display:none;margin-top:14px;padding:12px 14px;
+  border-left:3px solid #8a7c65;border-radius:0 7px 7px 0;
+  background:rgba(255,255,255,.25);
+  font-size:clamp(9px,.88vw,13px);line-height:1.45
+}
+.feedback.show{display:block}
+.feedback b{display:block;margin-bottom:1px}
+.next-wrap{display:none;justify-content:flex-end;margin-top:14px}
+.next-wrap.show{display:flex}
+.next-btn{
+  min-height:32px;padding:6px 12px;
+  border:1px solid rgba(64,49,21,.2);border-radius:8px;
+  background:linear-gradient(180deg,#f6d25a,#e4b936);
+  color:#18130d;font-size:clamp(9px,.88vw,13px);font-weight:800;
+  cursor:pointer;box-shadow:0 2px 5px rgba(78,52,9,.18)
+}
+.complete-layer{
+  position:absolute;z-index:120;inset:0;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(8,8,8,.62);backdrop-filter:blur(4px);padding:8%
+}
+.complete-layer.open{display:flex}
+.complete-card{
+  width:54%;padding:4% 5%;
+  border:1px solid rgba(77,67,53,.42);border-radius:16px;
+  background:linear-gradient(145deg,#eee6da,#d9cdbc);
+  box-shadow:0 24px 55px rgba(0,0,0,.45);
+  text-align:center;color:#181613
+}
+.complete-kicker{
+  font-size:clamp(7px,.75vw,10px);
+  letter-spacing:.12em;text-transform:uppercase;font-weight:800;opacity:.55
+}
+.complete-card h3{margin:2% 0 0;font-size:clamp(16px,2vw,28px);font-weight:800}
+.big-score{
+  margin:3% 0 2%;
+  font-size:clamp(30px,4.5vw,62px);font-weight:900;letter-spacing:-.05em
+}
+.complete-text{font-size:clamp(8px,.9vw,13px);line-height:1.45;opacity:.72}
+.again{
+  margin-top:5%;min-height:36px;padding:7px 15px;
+  border:1px solid rgba(64,49,21,.2);border-radius:8px;
+  background:linear-gradient(180deg,#f6d25a,#e4b936);
+  font-size:clamp(7px,.75vw,11px);font-weight:800;cursor:pointer
+}
+@keyframes modalIn{
+  from{opacity:0;transform:translateX(18px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media(max-width:760px){
+  body{padding:0;background:#171615}
+  .game-wrap{width:100vw}
+  .stage{border-radius:0}
+}
+</style>
+</head>
+<body>
+<div class="game-wrap">
+<div id="negotiationGame" class="stage" aria-label="Игра по переговорам">
+  <div class="ambient"></div>
+
+  <section class="header-panel">
+    <div class="header-inner">
+      <div class="mission-copy">
+        <div class="mission-label">Учебная миссия</div>
+        <div class="mission-title">Операция «Договориться»</div>
+        <div class="mission-sub">3 переговорных кейса · 9 решений</div>
+        <div class="progress-labels">
+          <span>Прогресс миссии</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-icon">▤</div><div><span>Досье</span><b id="caseStat">0/3</b></div></div>
+        <div class="stat"><div class="stat-icon">✓</div><div><span>Решения</span><b id="decisionStat">0/9</b></div></div>
+        <div class="stat"><div class="stat-icon">☆</div><div><span>Счет</span><b id="scoreStat">0/90</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="drawer-shell" aria-label="Архив переговорных досье">
+    <div class="drawer-inner">
+      <div class="rail left"></div>
+      <div class="rail right"></div>
+      <div id="folderStack" class="folder-stack"></div>
+    </div>
+
+    <div class="drawer-front">
+      <div class="label-plate">
+        <b>CONFIDENTIAL</b>
+        <span>NEGOTIATION FILES</span>
+      </div>
+      <div class="handle"></div>
+    </div>
+  </section>
+
+  <div class="hint">Выбери досье и пройди три этапа переговоров</div>
+  <button id="restart" class="restart" type="button">Начать заново</button>
+
+  <div id="modalLayer" class="modal-layer" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <article class="case-modal">
+      <header class="modal-head">
+        <div>
+          <div id="modalCase" class="modal-case"></div>
+          <div id="modalTitle" class="modal-title"></div>
+        </div>
+        <button id="closeModal" class="close-modal" type="button" aria-label="Закрыть кейс">×</button>
+      </header>
+
+      <div class="case-brief">
+        <b>Ситуация</b>
+        <span id="caseBrief"></span>
+      </div>
+
+      <div class="question-area">
+        <div id="qCount" class="q-count"></div>
+        <div id="qText" class="q-text"></div>
+        <div id="answers" class="answers"></div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+        <div id="nextWrap" class="next-wrap">
+          <button id="nextBtn" class="next-btn" type="button">Следующий вопрос</button>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div id="completeLayer" class="complete-layer" role="dialog" aria-modal="true" aria-labelledby="completeTitle">
+    <div class="complete-card">
+      <div class="complete-kicker">Миссия завершена</div>
+      <h3 id="completeTitle">Архив закрыт</h3>
+      <div id="bigScore" class="big-score">0/90</div>
+      <div id="completeText" class="complete-text"></div>
+      <button id="again" class="again" type="button">Пройти еще раз</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(() => {
+  const root = document.getElementById('negotiationGame');
+
+  const cases = [
+    {
+      code:'N-014',
+      title:'Бюджет под давлением',
+      brief:'Заказчик просит снизить бюджет на 15%. Ты хочешь сохранить качество решения и маржинальность проекта.',
+      questions:[
+        {
+          q:'Заказчик говорит: «Цена слишком высокая. Снижайте на 15%». Какой первый шаг сильнее?',
+          a:[
+            'Сразу предложить компромисс по цене',
+            'Выяснить истинные приоритеты и ограничения заказчика',
+            'Защитить текущий бюджет и подробно обосновать его'
+          ],
+          correct:1,
+          good:'Сначала ты выясняешь интерес за позицией. Требование скидки может быть связано с бюджетным лимитом, внутренним согласованием или другим условием.',
+          bad:'Ты реагируешь на заявленную позицию, не выяснив ее причину. Это сразу сужает пространство для переговоров.'
+        },
+        {
+          q:'Заказчик добавляет: «У конкурента дешевле». Что делать дальше?',
+          a:[
+            'Уточнить, по каким критериям сравниваются предложения',
+            'Объяснить, почему конкурент, скорее всего, демпингует',
+            'Предложить дополнительную скидку за быстрое решение'
+          ],
+          correct:0,
+          good:'Ты переводишь разговор из одной цифры в набор критериев: объем, сроки, риски и ожидаемый результат.',
+          bad:'Спор или новая скидка не отвечают на главный вопрос: действительно ли заказчик сравнивает одинаковые предложения.'
+        },
+        {
+          q:'Лимит бюджета подтвердился. Как сформировать договоренность?',
+          a:[
+            'Снизить цену и сохранить весь объем работ',
+            'Предложить варианты обмена: объем, сроки или состав решения',
+            'Отложить разговор и позже прислать новую цену'
+          ],
+          correct:1,
+          good:'Уступка связана с изменением условий. Это сохраняет ценность предложения и дает заказчику выбор.',
+          bad:'Односторонняя уступка ухудшает твою позицию и создает слабый прецедент для следующих переговоров.'
+        }
+      ]
+    },
+    {
+      code:'T-027',
+      title:'Сроки без запаса',
+      brief:'Заказчик хочет запустить проект на две недели раньше. При текущем объеме команда предупреждает о риске ошибок и переработок.',
+      questions:[
+        {
+          q:'Заказчик говорит: «Дата не обсуждается». Как ответить?',
+          a:[
+            'Повторить, что команда не успеет',
+            'Уточнить, какой результат обязательно нужен именно к этой дате',
+            'Согласиться и позже искать способ ускорить работу'
+          ],
+          correct:1,
+          good:'Ты отделяешь позицию «дата не обсуждается» от интереса заказчика и ищешь пространство для решения.',
+          bad:'Спор о сроке или мгновенное согласие оставляют обе стороны внутри жесткой исходной позиции.'
+        },
+        {
+          q:'Выяснилось, что к ранней дате нужен только демонстрационный запуск. Что предложить?',
+          a:[
+            'Минимальную рабочую версию к нужной дате, остальное позже',
+            'Сохранить полный объем и увеличить нагрузку команды',
+            'Отказаться от раннего запуска'
+          ],
+          correct:0,
+          good:'Ты сохраняешь нужный заказчику результат, но меняешь объем первого этапа и контролируешь риски.',
+          bad:'Такой ход либо переносит цену договоренности на команду, либо вообще закрывает пространство для решения.'
+        },
+        {
+          q:'Что нужно сделать в финале разговора?',
+          a:[
+            'Зафиксировать объем этапов, сроки, ответственных, риски и следующую сверку',
+            'Ограничиться устным подтверждением',
+            'Передать команде новый срок без дополнительной фиксации'
+          ],
+          correct:0,
+          good:'Финал переговоров превращается в конкретную договоренность, которую обе стороны понимают одинаково.',
+          bad:'Без фиксации деталей стороны могут выйти из встречи с разным пониманием того, о чем договорились.'
+        }
+      ]
+    },
+    {
+      code:'P-041',
+      title:'Жесткий собеседник',
+      brief:'На финальной встрече партнер говорит: «Это последнее предложение. Либо принимаете сегодня, либо мы закрываем вопрос».',
+      questions:[
+        {
+          q:'Как лучше отреагировать на ультиматум?',
+          a:[
+            'Ответить встречным ультиматумом',
+            'Взять паузу и уточнить, что делает предложение окончательным',
+            'Согласиться, чтобы не потерять сделку'
+          ],
+          correct:1,
+          good:'Пауза снижает давление, а вопрос позволяет проверить, действительно ли граница жесткая или это переговорная тактика.',
+          bad:'Ты принимаешь рамку собеседника вместо того, чтобы сначала проверить, насколько она реальна.'
+        },
+        {
+          q:'Собеседник готов изменить часть условий, но хочет уступку от тебя. Как действовать?',
+          a:[
+            'Дать уступку первой ради конструктивного тона',
+            'Связать уступки: если мы меняем X, вы подтверждаете Y',
+            'Отказаться от любых уступок'
+          ],
+          correct:1,
+          good:'Взаимный обмен сохраняет баланс. Каждое движение одной стороны связано с конкретным движением другой.',
+          bad:'Односторонняя уступка ослабляет позицию, а полный отказ может закрыть полезный обмен.'
+        },
+        {
+          q:'Условия согласованы. Что проверить перед завершением?',
+          a:[
+            'Только итоговую цену',
+            'Совпадает ли понимание условий, обязательств, сроков и следующего шага',
+            'Насколько дружелюбно закончилась встреча'
+          ],
+          correct:1,
+          good:'Ты проверяешь всю договоренность, а не отдельный параметр, и снижаешь риск разного прочтения после встречи.',
+          bad:'Даже согласованная цена не спасет договоренность, если стороны по-разному понимают сроки, обязательства или следующий шаг.'
+        }
+      ]
+    }
+  ];
+
+  const state = {
+    active:null,
+    q:0,
+    score:0,
+    answered:new Set(),
+    completed:new Set(),
+    locked:false
+  };
+
+  const $ = s => root.querySelector(s);
+  const stack = $('#folderStack');
+  const modal = $('#modalLayer');
+  const answers = $('#answers');
+  const feedback = $('#feedback');
+  const nextWrap = $('#nextWrap');
+
+  function folderClass(i){
+    return i===0 ? 'case1' : i===1 ? 'case2' : 'case3';
+  }
+
+  function renderFolders(){
+    stack.innerHTML = '';
+
+    [2,1,0].forEach(i => {
+      const c = cases[i];
+      const done = state.completed.has(i);
+      const el = document.createElement('div');
+      el.className = 'folder ' + folderClass(i);
+
+      el.innerHTML = `
+        <button type="button" class="folder-button" aria-label="Открыть кейс ${c.title}">
+          <span class="folder-paper"></span>
+          <span class="tab">
+            <span class="case-id">КЕЙС ${String(i+1).padStart(2,'0')}</span>
+            <span class="case-code">${c.code}</span>
+          </span>
+          <span class="folder-content">
+            <span class="folder-title">${c.title}</span>
+            <span class="folder-badge ${done ? 'done' : ''}">
+              <span class="dot"></span>
+              ${done ? 'закрыто' : '3 вопроса'}
+            </span>
+          </span>
+        </button>`;
+
+      el.querySelector('button').addEventListener('click', () => openCase(i));
+      stack.appendChild(el);
+    });
+  }
+
+  function openCase(i){
+    state.active = i;
+    state.q = 0;
+    state.locked = false;
+    renderQuestion();
+    modal.classList.add('open');
+    setTimeout(() => $('#closeModal').focus(), 0);
+  }
+
+  function closeCase(){
+    modal.classList.remove('open');
+    state.active = null;
+  }
+
+  function renderQuestion(){
+    const c = cases[state.active];
+    const q = c.questions[state.q];
+
+    $('#modalCase').textContent = 'КЕЙС ' + String(state.active + 1).padStart(2,'0');
+    $('#modalTitle').textContent = c.title;
+    $('#caseBrief').textContent = c.brief;
+    $('#qCount').textContent = `Вопрос ${state.q + 1} из 3`;
+    $('#qText').textContent = q.q;
+
+    answers.innerHTML = '';
+    feedback.className = 'feedback';
+    feedback.innerHTML = '';
+    nextWrap.className = 'next-wrap';
+    state.locked = false;
+
+    ['A','B','C'].forEach((letter, idx) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'answer';
+      b.innerHTML = `<span class="answer-letter">${letter}</span>${q.a[idx]}`;
+      b.addEventListener('click', () => choose(idx, b));
+      answers.appendChild(b);
+    });
+  }
+
+  function choose(idx, button){
+    if(state.locked) return;
+    state.locked = true;
+
+    const q = cases[state.active].questions[state.q];
+    const key = `${state.active}-${state.q}`;
+    const correct = idx === q.correct;
+
+    [...answers.children].forEach(b => b.disabled = true);
+    button.classList.add(correct ? 'good' : 'bad');
+
+    if(correct && !state.answered.has(key)){
+      state.score += 10;
+    }
+
+    state.answered.add(key);
+
+    feedback.innerHTML = `
+      <b>${correct ? 'Сильный ход' : 'Рискованный ход'}</b>
+      ${correct ? q.good : q.bad}
+    `;
+    feedback.classList.add('show');
+
+    $('#nextBtn').textContent = state.q === 2 ? 'Закрыть досье' : 'Следующий вопрос';
+    nextWrap.classList.add('show');
+
+    updateHud();
+  }
+
+  function next(){
+    if(state.q < 2){
+      state.q++;
+      renderQuestion();
+      return;
+    }
+
+    state.completed.add(state.active);
+    closeCase();
+    renderFolders();
+    updateHud();
+
+    if(state.completed.size === 3){
+      showResult();
+    }
+  }
+
+  function updateHud(){
+    const decisions = state.answered.size;
+    const p = Math.round(decisions / 9 * 100);
+
+    $('#caseStat').textContent = `${state.completed.size}/3`;
+    $('#decisionStat').textContent = `${decisions}/9`;
+    $('#scoreStat').textContent = `${state.score}/90`;
+    $('#progressPct').textContent = p + '%';
+    $('#progressFill').style.width = p + '%';
+  }
+
+  function showResult(){
+    let text = 'Ты видишь базовую структуру переговоров, но в нескольких моментах слишком быстро реагируешь на позицию собеседника.';
+
+    if(state.score >= 80){
+      text = 'Сильный результат. Ты выясняешь интересы, связываешь уступки с условиями и четко фиксируешь договоренности.';
+    } else if(state.score >= 60){
+      text = 'Хороший результат. Можно точнее работать с интересами собеседника и не отдавать уступки без встречного движения.';
+    }
+
+    $('#bigScore').textContent = `${state.score}/90`;
+    $('#completeText').textContent = text;
+    $('#completeLayer').classList.add('open');
+  }
+
+  function reset(){
+    state.active = null;
+    state.q = 0;
+    state.score = 0;
+    state.answered.clear();
+    state.completed.clear();
+    state.locked = false;
+
+    modal.classList.remove('open');
+    $('#completeLayer').classList.remove('open');
+
+    renderFolders();
+    updateHud();
+  }
+
+  $('#closeModal').addEventListener('click', closeCase);
+  $('#nextBtn').addEventListener('click', next);
+  $('#restart').addEventListener('click', reset);
+  $('#again').addEventListener('click', reset);
+
+  modal.addEventListener('click', e => {
+    if(e.target === modal) closeCase();
+  });
+
+  root.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && modal.classList.contains('open')){
+      closeCase();
+    }
+  });
+
+  renderFolders();
+  updateHud();
+})();
+</script>
+</body>
+</html>
